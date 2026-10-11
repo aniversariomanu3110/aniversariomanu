@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convite de Aniversário - 15 Anos</title>
+
+  <!-- Fontes do Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <!-- Biblioteca para Confetis -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #f7ede8;
+      background-image: radial-gradient(#e8cebf 1px, transparent 1px);
+      background-size: 22px 22px;
+      font-family: 'Montserrat', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 15px;
+      color: #5a3d31;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Botão Flutuante de Música */
+    .music-control {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #dcbdb3;
+      color: #8c5354;
+      padding: 10px 15px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      backdrop-filter: blur(5px);
+      transition: all 0.3s ease;
+    }
+
+    .music-control:hover {
+      transform: scale(1.05);
+      background: #ffffff;
+    }
+
+    /* Envelope Container */
+    .envelope-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      perspective: 1200px;
+      cursor: pointer;
+      box-shadow: 0 20px 40px rgba(90, 61, 49, 0.18);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    /* Convite Interno */
+    .card-inside {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .card-inside img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Abas do Envelope (Usando a Própria Imagem Original) */
+    .door {
+      position: absolute;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      z-index: 3;
+      overflow: hidden;
+      transition: transform 1.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 12px rgba(0,0,0,0.12);
+      backface-visibility: hidden;
+    }
+
+    .door img {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 200%;
+      max-width: none;
+      object-fit: cover;
+    }
+
+    .door-left {
+      left: 0;
+      transform-origin: left center;
+      border-radius: 12px 0 0 12px;
+    }
+
+    .door-left img { left: 0; }
+
+    .door-right {
+      right: 0;
+      transform-origin: right center;
+      border-radius: 0 12px 12px 0;
+    }
+
+    .door-right img { right: 0; }
+
+    /* Animação de Abertura */
+    .envelope-wrapper.open .door-left {
+      transform: rotateY(-120deg);
+    }
+
+    .envelope-wrapper.open .door-right {
+      transform: rotateY(120deg);
+    }
+
+    .envelope-wrapper.open {
+      cursor: default;
+    }
+
+    /* Dica Flutuante */
+    .click-hint {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 10px 22px;
+      border-radius: 25px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #8c5354;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      animation: pulseHint 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseHint {
+      0%, 100% { transform: translateX(-50%) scale(1); }
+      50% { transform: translateX(-50%) scale(1.05); }
+    }
+
+    .envelope-wrapper.open .click-hint {
+      opacity: 0;
+    }
+
+    /* Transição para elementos que aparecem após abrir */
+    .reveal-section {
+      width: 100%;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.8s ease 0.3s;
+    }
+
+    .envelope-wrapper.open ~ .reveal-section {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Contador Regressivo */
+    .countdown-container {
+      width: 100%;
+      margin-top: 20px;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(90, 61, 49, 0.08);
+      text-align: center;
+      border: 1px solid #f0ded5;
+    }
+
+    .countdown-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.95rem;
+      color: #8c5354;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .timer {
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .timer-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .timer-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #6e4b41;
+      font-family: 'Cinzel', serif;
+    }
+
+    .timer-label {
+      font-size: 0.7rem;
+      color: #a07d72;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* Cartões Expansíveis (Accordion) */
+    .accordion-container {
+      width: 100%;
+      margin-top: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .accordion-item {
+      background: #ffffff;
+      border: 1px solid #f0ded5;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(90, 61, 49, 0.05);
+      transition: all 0.3s ease;
+    }
+
+    .accordion-header {
+      width: 100%;
+      padding: 14px 18px;
+      background: #ffffff;
+      border: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #8c5354;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .accordion-header:hover {
+      background: #fdfaf9;
+    }
+
+    .accordion-icon {
+      font-size: 0.8rem;
+      transition: transform 0.3s ease;
+      color: #a07d72;
+    }
+
+    .accordion-item.active .accordion-icon {
+      transform: rotate(180deg);
+    }
+
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease-out, padding 0.35s ease;
+      background: #faf4f1;
+      padding: 0 18px;
+      color: #6e4b41;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .accordion-item.active .accordion-content {
+      padding: 14px 18px;
+      max-height: 200px;
+      border-top: 1px solid #f2e6e3;
+    }
+
+    .accordion-content p {
+      margin-bottom: 6px;
+    }
+
+    .accordion-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    .btn-location {
+      display: inline-block;
+      margin-top: 8px;
+      color: #8c5354;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
+    /* Formulário RSVP */
+    .rsvp-section {
+      width: 100%;
+      margin-top: 15px;
+      background: #ffffff;
+      padding: 22px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(90, 61, 49, 0.08);
+      text-align: center;
+      border: 1px solid #f0ded5;
+    }
+
+    .rsvp-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.25rem;
+      color: #8c5354;
+      margin-bottom: 6px;
+    }
+
+    .rsvp-subtitle {
+      font-size: 0.85rem;
+      color: #7a6358;
+      margin-bottom: 18px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #6e4b41;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #dcbdb3;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.3s;
+      background-color: #fdfaf9;
+    }
+
+    .form-control:focus {
+      border-color: #8c5354;
+      background-color: #fff;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 13px 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: inherit;
+    }
+
+    .btn-confirm {
+      background-color: #25D366;
+      color: white;
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+    }
+
+    .btn-confirm:hover {
+      background-color: #1ebc57;
+      transform: translateY(-2px);
+    }
+
+    .btn-decline {
+      background-color: #f2e6e3;
+      color: #7a5047;
+    }
+
+    .btn-decline:hover {
+      background-color: #e5d2cd;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Áudio de Fundo (Música Instrumental) -->
+  <audio id="bgMusic" loop preload="auto">
+    <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-piano-112188.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Botão de Controle de Música -->
+  <button class="music-control" id="musicToggle" onclick="toggleMusic()">
+    <span id="musicIcon">🔊</span> <span id="musicText">Música</span>
+  </button>
+
+  <div class="container">
+    
+    <!-- Envelope Interativo -->
+    <div class="envelope-wrapper" id="envelope" onclick="openEnvelope()">
+      
+      <!-- Imagem Interna (Texto Completo do Convite) -->
+      <div class="card-inside">
+        <img src="img/convite.jpeg" alt="Convite de Aniversário">
+      </div>
+
+      <!-- Aba Esquerda -->
+      <div class="door door-left">
+        <img src="img/capa.jpeg" alt="Capa Esquerda">
+      </div>
+
+      <!-- Aba Direita -->
+      <div class="door door-right">
+        <img src="img/capa.jpeg" alt="Capa Direita">
+      </div>
+
+      <div class="click-hint" id="hintText">Clique no selo para abrir 💌</div>
+    </div>
+
+    <!-- Seção Revelada após a Abertura -->
+    <div class="reveal-section">
+      
+      <!-- Contador Regressivo -->
+      <div class="countdown-container">
+        <div class="countdown-title">Contagem Regressiva para a Festa</div>
+        <div class="timer">
+          <div class="timer-box"><span class="timer-value" id="days">00</span><span class="timer-label">Dias</span></div>
+          <div class="timer-box"><span class="timer-value" id="hours">00</span><span class="timer-label">Horas</span></div>
+          <div class="timer-box"><span class="timer-value" id="minutes">00</span><span class="timer-label">Min</span></div>
+          <div class="timer-box"><span class="timer-value" id="seconds">00</span><span class="timer-label">Seg</span></div>
+        </div>
+      </div>
+
+      <!-- Cartões Expansíveis -->
+      <div class="accordion-container">
+        
+        <!-- Cartão 1: Traje -->
+        <div class="accordion-item">
+          <button class="accordion-header" onclick="toggleAccordion(this)">
+            <span>| Traje Recomendado</span>
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <p><strong>Estilo:</strong> Social ou Esporte Fino.</p>
+            <p>Sinta-se à vontade para vir elegante e confortável para celebrar esta noite inesquecível conosco!</p>
+          </div>
+        </div>
+
+        <!-- Cartão 2: Presentes -->
+        <div class="accordion-item">
+          <button class="accordion-header" onclick="toggleAccordion(this)">
+            <span>| Sugestões de Presente</span>
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <p>Para quem desejar me presentear:</p>
+            <p>• <strong>Roupa:</strong> M</p>
+            <p>• <strong>Calçado:</strong> 36 / 37</p>
+          </div>
+        </div>
+
+        <!-- Cartão 3: Local -->
+        <div class="accordion-item">
+          <button class="accordion-header" onclick="toggleAccordion(this)">
+            <span>| Local do Evento & Mapa</span>
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <p><strong>IEAD PLENITUDE – TEMPLO SEDE</strong></p>
+            <p>1002 Sul, AV. Teotônio Segurado</p>
+            <a href="https://maps.google.com/?q=IEAD+PLENITUDE+1002+Sul+AV+Teotonio+Segurado+Palmas+TO" target="_blank" class="btn-location">
+              Abrir rota no Google Maps 🗺️
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Formulário RSVP -->
+      <div class="rsvp-section">
+        <h2 class="rsvp-title">Confirmação de Presença</h2>
+        <p class="rsvp-subtitle">Por favor, informe o seu nome para confirmar:</p>
+
+        <div class="form-group">
+          <label for="guestName">Seu Nome Completo</label>
+          <input type="text" id="guestName" class="form-control" placeholder="Digite seu nome aqui..." required>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-confirm" onclick="sendRSVP(true)">
+            ✓ Vou comparecer
+          </button>
+          <button class="btn btn-decline" onclick="sendRSVP(false)">
+            ✗ Não poderei ir
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    let musicPlaying = false;
+    const music = document.getElementById('bgMusic');
+    const musicIcon = document.getElementById('musicIcon');
+
+    function openEnvelope() {
+      const envelope = document.getElementById('envelope');
+      if (!envelope.classList.contains('open')) {
+        envelope.classList.add('open');
+        
+        // Tocar música
+        playMusic();
+
+        // Disparar Confetis
+        launchConfetti();
+      }
+    }
+
+    function playMusic() {
+      music.play().then(() => {
+        musicPlaying = true;
+        musicIcon.textContent = '🔊';
+      }).catch(e => {
+        console.log("A reprodução automática foi bloqueada pelo navegador.");
+      });
+    }
+
+    function toggleMusic() {
+      if (musicPlaying) {
+        music.pause();
+        musicPlaying = false;
+        musicIcon.textContent = '🔇';
+      } else {
+        music.play();
+        musicPlaying = true;
+        musicIcon.textContent = '🔊';
+      }
+    }
+
+    function launchConfetti() {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 85,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#e6a5a5', '#b86b6c', '#f7ede8', '#d4af37']
+        });
+      }
+    }
+
+    /* Função para expandir e recolher os cartões */
+    function toggleAccordion(button) {
+      const item = button.parentElement;
+      const isActive = item.classList.contains('active');
+
+      // Fecha todos os cartões abertos
+      document.querySelectorAll('.accordion-item').forEach(i => {
+        i.classList.remove('active');
+      });
+
+      // Se não estava ativo, abre o clicado
+      if (!isActive) {
+        item.classList.add('active');
+      }
+    }
+
+    /* Contagem Regressiva para 31/10/2026 às 19:30 */
+    const eventDate = new Date("2026-10-31T19:30:00").getTime();
+
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const distance = eventDate - now;
+
+      if (distance > 0) {
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        document.getElementById("days").innerText = days < 10 ? '0' + days : days;
+        document.getElementById("hours").innerText = hours < 10 ? '0' + hours : hours;
+        document.getElementById("minutes").innerText = minutes < 10 ? '0' + minutes : minutes;
+        document.getElementById("seconds").innerText = seconds < 10 ? '0' + seconds : seconds;
+      } else {
+        document.getElementById("days").innerText = "00";
+        document.getElementById("hours").innerText = "00";
+        document.getElementById("minutes").innerText = "00";
+        document.getElementById("seconds").innerText = "00";
+      }
+    }
+
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    /* Envio de RSVP pelo WhatsApp */
+    function sendRSVP(willAttend) {
+      const nameInput = document.getElementById('guestName');
+      const name = nameInput.value.trim();
+
+      if (!name) {
+        alert('Por favor, digite seu nome antes de responder!');
+        nameInput.focus();
+        return;
+      }
+
+      const phone = "556385119701";
+      let message = "";
+
+      if (willAttend) {
+        message = `Olá! Meu nome é *${name}* e estou confirmando minha presença no aniversário de 15 anos! ✨🎉`;
+      } else {
+        message = `Olá! Meu nome é *${name}*. Infelizmente não poderei comparecer ao aniversário, mas agradeço muito o convite! ❤️`;
+      }
+
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+
+      window.open(whatsappUrl, '_blank');
+    }
+  </script>
+</body>
+</html>
